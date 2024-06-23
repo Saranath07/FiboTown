@@ -38,6 +38,14 @@
   const name = ref("");
   const route = useRoute();
   const router = useRouter();
+
+  function clearSessionStorage() {
+  sessionStorage.clear();
+}
+
+onMounted(() => {
+  clearSessionStorage();
+});
   
   function start() {
     // alert("Starting..");

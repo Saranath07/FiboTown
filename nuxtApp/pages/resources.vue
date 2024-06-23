@@ -1,10 +1,16 @@
 <template>
     <div class="resources-container">
-      <h1 class="text-center">Select Your Resources</h1>
+      <h1 class="text-center title">Select Your Resources</h1>
       <div class="resources-section">
         <h2>Fibonacci Resources</h2>
         <div class="resource-buttons">
-          <button v-for="(resource, index) in fibonacciResources" :key="index" @click="selectResource(resource, 'fibonacci')">
+          <button
+            v-for="(resource, index) in fibonacciResources"
+            :key="index"
+            :class="{ selected: selectedResources.fibonacci === resource, dimmed: selectedResources.fibonacci !== null && selectedResources.fibonacci !== resource }"
+            :disabled="selectedResources.fibonacci !== null"
+            @click="selectResource(resource, 'fibonacci')"
+          >
             {{ resource }}
           </button>
         </div>
@@ -12,7 +18,13 @@
       <div class="resources-section">
         <h2>Odd Town Resources</h2>
         <div class="resource-buttons">
-          <button v-for="(resource, index) in oddTownResources" :key="index" @click="selectResource(resource, 'oddTown')">
+          <button
+            v-for="(resource, index) in oddTownResources"
+            :key="index"
+            :class="{ selected: selectedResources.oddTown === resource, dimmed: selectedResources.oddTown !== null && selectedResources.oddTown !== resource }"
+            :disabled="selectedResources.oddTown !== null"
+            @click="selectResource(resource, 'oddTown')"
+          >
             {{ resource }}
           </button>
         </div>
@@ -24,36 +36,51 @@
         <div class="latex-space"></div>
         <MDC :value="matrixDisplay" class="latex-display"/>
       </div>
-      <div class="text-center">
+      <div class="button-group text-center">
         <button class="next-button" @click="proceed">Next</button>
+        <button class="back-button" @click="goBack">Back</button>
       </div>
     </div>
   </template>
   
   <script setup>
-  import { ref } from 'vue';
+  import { ref, onMounted } from 'vue';
   import { useRouter } from 'vue-router';
-  // import 'katex/dist/katex.min.css'; // Import KaTeX CSS
-  // import Katex from 'vue-katex'; // Import vue-katex component
   
   const router = useRouter();
   const fibInput = ref(0);
   const fibonacciResources = ref(generateFibonacciResources());
   const oddTownResources = ref(generateOddTownResources());
-  let selectedResources = { fibonacci: null, oddTown: null };
+  const selectedResources = ref({
+    fibonacci: null,
+    oddTown: null
+  });
   const matrixDisplay = ref('');
   
+  // Load selected resources from session storage if available
+  onMounted(() => {
+    const storedResources = JSON.parse(sessionStorage.getItem('selectedResources'));
+    if (storedResources) {
+      selectedResources.value = storedResources;
+    }
+  });
+  
   function selectResource(resource, type) {
-    selectedResources[type] = resource;
+    selectedResources.value[type] = resource;
+    sessionStorage.setItem('selectedResources', JSON.stringify(selectedResources.value));
     alert(`Selected ${type} resource: ${resource}`);
   }
   
   function proceed() {
-    if (selectedResources.fibonacci && selectedResources.oddTown) {
-      router.push('/nextPage');
+    if (selectedResources.value.fibonacci && selectedResources.value.oddTown) {
+      router.push('/gamePlay');
     } else {
       alert('Please select resources from both sections');
     }
+  }
+  
+  function goBack() {
+    router.push('/');
   }
   
   function multiplyMatrices(a, b) {
@@ -126,6 +153,11 @@
     margin: 0;
     padding: 0;
   }
+
+  .title{
+    font-size: 2.5em;
+    color: #4a90e2;
+  }
   
   .resources-container {
     max-width: 800px;
@@ -158,7 +190,15 @@
     margin: 5px;
     border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, opacity 0.3s;
+  }
+  
+  .resource-buttons button.dimmed {
+    opacity: 0.5;
+  }
+  
+  .resource-buttons button.selected {
+    background-color: #007bff;
   }
   
   .resource-buttons button:hover {
@@ -179,7 +219,13 @@
     margin-top: 10px;
   }
   
-  .next-button {
+  .button-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  .next-button, .back-button {
     background-color: #28a745;
     color: white;
     border: none;
@@ -189,8 +235,16 @@
     transition: background-color 0.3s;
   }
   
-  .next-button:hover {
+  .next-button:hover, .back-button:hover {
     background-color: #218838;
+  }
+  
+  .back-button {
+    background-color: #ff5c5c;
+  }
+  
+  .back-button:hover {
+    background-color: #ff1a1a;
   }
   </style>
   
